@@ -1,0 +1,157 @@
+#!/bin/bash
+
+# Default settings
+FOLDER_NAME=""
+EXE_NAME=""
+SETTINGS="setting-base"
+OPTIONS=""
+INFILE=""
+TEST_PREFIX="t1"
+TEST_FOLDER="tests"
+
+ROOT="/root/simplescalar/SPEC2000"
+
+# Prepare base functions
+set -e
+RESET='\033[0m'
+COLOR='\033[1;32m'
+ERRCOLOR='\033[1;91m'
+
+function msg {
+    echo -e "${COLOR}$(date): $1${RESET}"
+}
+
+function errmsg {
+    echo -e "${ERRCOLOR}$(date): $1${RESET}"
+}
+
+function mcd {
+    mkdir -p "$1"
+    cd "$1"
+}
+
+HELP=false
+CLEAR=false
+HELP_MESSAGE="${COLOR}Parallel test for SimpleScalar - by Yuchen Jin / 20181204${RESET}
+    Use as \"${ERRCOLOR}bash test-exp option1=val1 option2=val2 ... --flag1 --flag2 ...${RESET}\"
+    where the options are:
+        ${ERRCOLOR}foldername${RESET}: name of subfolder where the program is. (default=$FOLDER_NAME)
+        ${ERRCOLOR}exename${RESET}:    name of the program. (default=$EXE_NAME)
+        ${ERRCOLOR}settings${RESET}:   settings file for configure command lines. (default=$SETTINGS)
+        ${ERRCOLOR}options${RESET}:    options added to the tested program. (default=$OPTIONS)
+        ${ERRCOLOR}infile${RESET}:     .in file which specifies the commands passed to the tested program. (default=$INFILE)
+        ${ERRCOLOR}testprefix${RESET}: prefix of the name of created sub-workspaces. (default=$TEST_PREFIX)
+        ${ERRCOLOR}testfolder${RESET}: name of the test folder. (default=$TEST_FOLDER)
+        ${ERRCOLOR}root${RESET}:       name of the benchmark root. (default=$ROOT)
+    where the flags are:
+        ${ERRCOLOR}--clear${RESET}:    clear all sub-workspaces in test folder.
+        ${ERRCOLOR}--help${RESET}:     display the help message.
+    "
+
+# Pass options from command line
+for ARGUMENT in "$@"
+do
+    KEY=$(echo $ARGUMENT | cut -f1 -d=)
+    if [[ $KEY != '--*' ]]
+    then
+        VALUE=$(echo $ARGUMENT | cut -f2 -d=)   
+    fi
+    case "$KEY" in
+            foldername)     FOLDER_NAME=${VALUE} ;;
+            exename)        EXE_NAME=${VALUE} ;;
+            settings)       SETTINGS=${VALUE} ;;
+            options)        OPTIONS=${VALUE} ;;
+            infile)         INFILE=${VALUE} ;;
+            testprefix)     TEST_PREFIX=${VALUE} ;;
+            testfolder)     TEST_FOLDER=${VALUE} ;;
+            root)           ROOT=${VALUE} ;;
+            --clear)        CLEAR=true ;;
+            --help)         HELP=true ;;
+            *)   
+    esac    
+done
+
+# Check whether to display the help message
+if $HELP
+then
+    echo -e "$HELP_MESSAGE"
+    exit 1
+fi
+
+# Enter the folder
+mcd ${ROOT}/${TEST_FOLDER}
+
+# Check whether to clear sub-workspaces
+if $CLEAR
+then
+    msg "Clear all sub-workspaces."
+    CLEAR_DIR=($(find . -mindepth 2 -maxdepth 2 -type d))
+    for dir in "${CLEAR_DIR[@]}"; do
+      rm -rf "${ROOT}/${TEST_FOLDER}/$dir"
+      echo -e "${COLOR}Clear${RESET}: ${ROOT}/${TEST_FOLDER}/${dir}"
+    done
+    exit 1
+fi
+
+# Check whether to specify the program
+if [ "x${FOLDER_NAME}" = "x" ] || [ "x${EXE_NAME}" = "x" ] || [ ! -f ${ROOT}/${FOLDER_NAME}/${EXE_NAME} ]
+then
+    errmsg "Need to specify both {foldername} and {exename}, and the program need to exist."
+    exit 1
+fi
+
+# Check the validity of the default config file, if does not exist, terminate the file
+if [ -f ${ROOT}/default.cfg ]
+then
+    msg "Have found default configuration file."
+else
+    errmsg "Have not found default configuration file, program would be terminated."
+    exit 1
+fi
+
+# Check the validity of the settings, if does not exist, terminate the file
+if [ "x$SETTINGS" != "x" ] && [ -f ${ROOT}/${SETTINGS} ]
+then
+    msg "Have found {settings}=${SETTINGS}."
+else
+    errmsg "Have not found {settings}=${SETTINGS}, program would be terminated."
+    exit 1
+fi
+
+# Check the validity of the income file, if does not exist, terminate the file
+if [ "x$INFILE" != "x" ]
+then
+    echo ${INFILE}
+    if [ -f ${ROOT}/${FOLDER_NAME}/${INFILE} ]
+    then
+        msg "Have found {infile}=${INFILE}."
+    else
+        errmsg "Have not found {infile}=${INFILE}, program would be terminated."
+        exit 1
+    fi
+    PARAM_FILE=" < $INFILE"
+else
+    PARAM_FILE=""
+fi
+
+# Begin to run commands
+msg "Begin to run commands."
+n=0
+pids=()
+while read p; do
+    p=$(echo $p | grep -o '^[^#]*')
+    if [ "x$p" != "x" ]
+    then
+        mcd ${FOLDER_NAME}/${TEST_PREFIX}-${n}
+        cp -n ${ROOT}/${FOLDER_NAME}/* ./
+        echo "sim-outorder -config ${ROOT}/default.cfg -redir:sim ../${FOLDER_NAME}${p} $EXE_NAME $OPTIONS$PARAM_FILE" | bash &
+        pids[${n}]=$!
+        cd ../..
+        n=$((n+1))
+    fi
+done <"${ROOT}/${SETTINGS}"
+
+# Wait until all sub-processes finish
+for pid in ${pids[*]}; do
+    wait $pid
+done

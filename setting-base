@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Vary the instruction cache size
+-i-8k.txt -cache:il1 il1:256:32:1:l # Test1: Instruction cache is 8KB
+-i-16k.txt -cache:il1 il1:512:32:1:l # Test2: Instruction cache is 16KB
+-i-64k.txt -cache:il1 il1:2048:32:1:l # Test3: Instruction cache is 64KB
+
+# Vary the data cache size
+-d-2k.txt -cache:dl1 dl1:16:32:4:l # Test1: Data cache is 2KB
+-d-32k.txt -cache:dl1 dl1:256:32:4:l # Test2: Data cache is 32KB
+-d-128k.txt -cache:dl1 dl1:1024:32:4:l # Test3: Data cache is 128KB
+
+# Vary the data cache associativity (with cache size 32KB fixed)
+-d-1w.txt -cache:dl1 dl1:1024:32:1:l # Test1: Data cache is 1-way
+-d-2w.txt -cache:dl1 dl1:512:32:2:l # Test2: Data cache is 2-way
+-d-8w.txt -cache:dl1 dl1:128:32:8:l # Test3: Data cache is 8-way
+
+# Vary the L2 cache size
+-l2-128k.txt -cache:dl2 ul2:512:64:4:l # Test1: L2 cache is 128KB
+-l2-512k.txt -cache:dl2 ul2:2048:64:4:l # Test2: L2 cache is 512KB
+-l2-1m.txt -cache:dl2 ul2:4096:64:4:l # Test3: L2 cache is 1MB
+
+# Vary the block size (with cache size fixed)
+-bk-32.txt -cache:il1 il1:512:32:1:l -cache:dl1 dl1:128:32:4:l -cache:dl2 ul2:2048:32:4:l # Test1: 32B block
+-bk-64.txt -cache:il1 il1:256:64:1:l -cache:dl1 dl1:64:64:4:l -cache:dl2 ul2:1024:64:4:l # Test2: 64B block
+-bk-128.txt -cache:il1 il1:128:128:1:l -cache:dl1 dl1:32:128:4:l -cache:dl2 ul2:512:128:4:l # Test3: 128B block
+-bk-256.txt -cache:il1 il1:64:256:1:l -cache:dl1 dl1:16:256:4:l -cache:dl2 ul2:256:256:4:l # Test4: 256B block

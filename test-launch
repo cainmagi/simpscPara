@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Test all programs! Each part is a program, we would start base testing and extra testing simultaneously.
+
+# bzip
+bash test-exp foldername=bzip exename=bzip200.peak.ev6 options="input.source 58" &
+bash test-exp foldername=bzip exename=bzip200.peak.ev6 options="input.source 58" settings=setting-extra testprefix=t2
+
+# crafty
+bash test-exp foldername=crafty exename=crafty00.peak.ev6 infile="crafty.in" &
+bash test-exp foldername=crafty exename=crafty00.peak.ev6 infile="crafty.in" settings=setting-extra testprefix=t2
+
+# eon
+bash test-exp foldername=eon exename=eon00.peak.ev6 options="chair.control.cook chair.camera chair.surfaces chair.cook.ppm ppm pixels_out.cook" &
+bash test-exp foldername=eon exename=eon00.peak.ev6 options="chair.control.cook chair.camera chair.surfaces chair.cook.ppm ppm pixels_out.cook" settings=setting-extra testprefix=t2
+
+# equake
+bash test-exp foldername=equake exename=equake00.peak.ev6 options="< inp.in > inp.out 2> inp.err" &
+bash test-exp foldername=equake exename=equake00.peak.ev6 options="< inp.in > inp.out 2> inp.err" settings=setting-extra testprefix=t2
+
+# galgel
+bash test-exp foldername=galgel exename=galgel00.peak.ev6 infile="galgel.in" &
+bash test-exp foldername=galgel exename=galgel00.peak.ev6 infile="galgel.in" settings=setting-extra testprefix=t2
+
+# gcc
+bash test-exp foldername=gcc exename=gcc00.peak.ev6 options="166.i -o 166.s" &
+bash test-exp foldername=gcc exename=gcc00.peak.ev6 options="166.i -o 166.s" settings=setting-extra testprefix=t2
+
+# mcf
+bash test-exp foldername=mcf exename=mcf00.peak.ev6 options="inp.in.mcf" &
+bash test-exp foldername=mcf exename=mcf00.peak.ev6 options="inp.in.mcf" settings=setting-extra testprefix=t2
+
+# mesa
+bash test-exp foldername=mesa exename=mesa00.peak.ev6 options="-frames 1000 -meshfile mesa.in -ppmfile mesa.ppm" &
+bash test-exp foldername=mesa exename=mesa00.peak.ev6 options="-frames 1000 -meshfile mesa.in -ppmfile mesa.ppm" settings=setting-extra testprefix=t2
+
+# swim
+bash test-exp foldername=swim exename=swim00.peak.ev6 infile="swim.in" &
+bash test-exp foldername=swim exename=swim00.peak.ev6 infile="swim.in" settings=setting-extra testprefix=t2
+
+# wupwise
+bash test-exp foldername=wupwise exename=wupwise00.peak.ev6 infile="wupwise.in" &
+bash test-exp foldername=wupwise exename=wupwise00.peak.ev6 infile="wupwise.in" settings=setting-extra testprefix=t2
